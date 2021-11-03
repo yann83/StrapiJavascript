@@ -1,5 +1,5 @@
-const url = "http://localhost:8082"
-const collection = "classifiedads";
+const url = "http://localhost:1337"
+const collection = "annonces";
 
 // Exporting variables and functions
 export { url,collection };

@@ -76,7 +76,15 @@ function afficheProfile() {
 }
 
 function getAnnonces() {
-    fetch(`${url}/${collection}`)
+    const getuser = getWithExpiry("user");
+    const token = JSON.parse(getuser).jwt;
+    fetch(`${url}/${collection}`,{
+        method: 'GET',
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    })
     .then(response => response.json()) /* on recupere l'objet sous form json */
     .then(result => {   
         console.log('getAnnonces',result);
@@ -91,15 +99,21 @@ function renderAnnonces(elements) {
     // Récupération de l'élement
     const tbodyDisplay = document.getElementsByTagName("tbody")[0];
     tbodyDisplay.innerHTML = "";
+    let renderPicture = "";
 
     annoncesList = []; // on reinitialise pour la fonction recherche
     elements.forEach(element => {
+        if (element.picture == null) { 
+            renderPicture = '../img/default.jpg';
+        } else {
+            renderPicture = url + element.picture.formats.thumbnail.url;
+        }
         const addItem =`
                         <tr>
                             <td>${element.title}</td>
                             <td>${element.category}</td>
-                            <td>${element.content}</td>
-                            <td><img src="${url}${element.picture.formats.thumbnail.url}" alt="${element.title}" onerror="this.onerror=null;this.src='../img/default.jpg';"/></td>
+                            <td>${element.content}</td>                            
+                            <td><img src="${renderPicture}" alt="${element.title}"/></td>
                             <td>
                             <button class="edit btn btn-sm btn-outline-success" value="${element.id}">Modifier</button>
                             <button class="delete btn btn-sm btn-outline-danger" value="${element.id}">Supprimer</button>
@@ -213,7 +227,6 @@ function envoiDatas(submitevent) {
     const title = formcrud.title.value.trim();
     const category = formcrud.category.value;
     const content = formcrud.content.value; 
-    const ispublished = true;   // /!\ dans ce cas ispublished est toujiours off la on le met on pour afficher l'ajout directement
     const picture = fileImage;
     console.log(title,category,content,picture);
 
@@ -235,8 +248,7 @@ function envoiDatas(submitevent) {
     const payload = { //on envoie ces infos sauf l'image
         title,
         content,
-        category,
-        ispublished
+        category
     };
 
     fetch(fetchstring,{
@@ -254,13 +266,16 @@ function envoiDatas(submitevent) {
       formData.append("files",picture);
       /*cette image sera associé a un objet de cette collection classifiedad
       sans le s voir strapi -> plugins -> Content-Types Builder*/
-      formData.append("ref","classifiedad");
+      formData.append("ref","annonce");
       formData.append("refId",envoiData.id);// quel est l'id
       formData.append("field","picture");//quel est le champ
       console.log("formData",formData);
       //envoi de l'image avec l'id précedent
-      fetch(`${url}/upload`,{
+      fetch(`${url}/upload`,{ // attention il faut autoriser l'upload pour les utilisateurs authentifiés
         method: 'POST',
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
         body: formData
       })
       .then((response) => {
