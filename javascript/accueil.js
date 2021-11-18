@@ -262,6 +262,7 @@ function envoiDatas(submitevent) {
     .then((response) => response.json())
     .then((envoiData) => { 
       console.log("upload part",envoiData);
+	  console.log("image",picture);
       const formData = new FormData();
       formData.append("files",picture);
       /*cette image sera associé a un objet de cette collection classifiedad
